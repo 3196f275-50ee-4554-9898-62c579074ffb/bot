@@ -1,23 +1,20 @@
-import logging
+
 import os
 
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (ApplicationBuilder, CommandHandler, ContextTypes,
                           MessageHandler, filters)
-
+load_dotenv()
 from gpt import request_chat_gpt
 
-load_dotenv()
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+
+
 TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Привет, я помощник. Чем я могу помочь?")
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = request_chat_gpt(update.message.text)

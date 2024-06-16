@@ -1,19 +1,48 @@
 import os
-import openai
+import re
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from openai import OpenAI
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def is_relevant_question(user_message):
+    # Простая проверка на наличие ключевых слов связанных со строительством
+    construction_keywords = ["цемент", "бетон", "фундамент", "кирпич", "строительство", "ремонт", "проектирование", "дизайн", "конструирование", "продажа"]
+    construction_keywords += [
+        "цемент", "бетон", "фундамент", "кирпич", "строительство", "ремонт",
+        "арматура", "штукатурка", "кирпичная кладка", "крыша", "перекрытие",
+        "стены", "окна", "двери", "изоляция", "утепление", "плитка",
+        "гидроизоляция", "свайный фундамент", "монолитный бетон",
+        "кладочные работы", "кровля", "отделочные работы",
+        "электрика в доме", "водоснабжение дома",
+        "канализация в доме",  # Коммунальные системы
+        # Материалы и инструменты
+        'строительные материалы', 'инструменты', 'сухие смеси', 'дерево',
+        'металл', 'трубы', 'перфораторы', 'дрели',
+        # Проектирование и планирование
+        'архитектурное проектирование', 'инженерные системы',
+        'строительная документация',
+        # Работы и процессы
+        'демонтаж',  # Снос зданий или конструкций.
+        'земляные работы',
+        'монтажные работы',
+        # Другие общие термины связанные со строительством.
+        'строительный кодекс', 'нормы безопасности', 'стройплощадка'
+    ]
+    for keyword in construction_keywords:
+        if re.search(r'\b' + keyword + r'\b', user_message, re.IGNORECASE):
+            return True
+    return False
 def request_chat_gpt(user_message):
     try:
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system",
-                 "content": "Ты помощник, ты помогаешь строителям, отвечая на их вопросы"},
-                {"role": "user", "content": user_message}
-            ]
-        )
-        return completion.choices[0].message['content']
+        if not is_relevant_question(user_message):
+            return "Извините, я могу отвечать только на вопросы связанные со строительством."
+        completion = client.chat.completions.create(model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Ты помощник, ты помогаешь строителям, отвечая на их вопросы."},
+            {"role": "user", "content": user_message}
+        ])
+        return completion.choices[0].message.content
     except Exception as e:
         print(f"An error occurred: {e}")
-        return ""  # Return an empty string or handle the error appropriately
+        return ""  # Возвращаем пустую строку или обрабатываем ошибку соответствующим образом
